@@ -5,7 +5,11 @@ const { faker } = require('@faker-js/faker'); // Use faker singleton
 const app = express();
 const port = 3000;
 
-app.use(cors());
+app.use(
+  cors({
+      origin: 'https://itransition-internship-task-5-backend.onrender.com',
+  })
+);
 app.use(express.json());
 
 // Helper function to convert string to number for seeding
