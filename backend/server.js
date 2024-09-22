@@ -3,11 +3,11 @@ const cors = require('cors');
 const seedrandom = require('seedrandom');
 const { faker } = require('@faker-js/faker'); // Use faker singleton
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3001;
 
 app.use(
   cors({
-      origin: 'https://itransition-internship-task-5-frontend.onrender.com/',
+      origin: 'https://itransition-internship-task-5-frontend.onrender.com',
   })
 );
 app.use(express.json());
