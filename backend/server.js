@@ -28,9 +28,9 @@ function getLocale(region) {
   switch (region) {
     case 'Mexico':
       return 'es'; // Use 'es' for Spanish
-    case 'USA':
+    case 'United_States':
       return 'en_US';
-    case 'UK':
+    case 'Great_Britain':
       return 'en_GB';
     default:
       return 'en';
@@ -132,8 +132,8 @@ function getAlphabet(region) {
   switch (region) {
     case 'Mexico':
       return 'abcdefghijklmnopqrstuvwxyzñáéíóúü';
-    case 'USA':
-    case 'UK':
+    case 'United_States':
+    case 'Great_Britain':
       return 'abcdefghijklmnopqrstuvwxyz';
     default:
       return 'abcdefghijklmnopqrstuvwxyz';
@@ -144,9 +144,9 @@ function generateAddress(region) {
   switch (region) {
     case 'Mexico':
       return `${faker.location.streetAddress()} ${faker.location.city()} ${faker.location.state()}`;
-    case 'USA':
+    case 'United_States':
       return `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.stateAbbr()} ${faker.location.zipCode()}`;
-    case 'UK':
+    case 'Great_Britain':
       return `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.county()}, ${faker.location.postcode()}`;
     default:
       return faker.location.streetAddress();
@@ -156,13 +156,13 @@ function generateAddress(region) {
 function generatePhone(region) {
   switch (region) {
     case 'Mexico':
-      return faker.phone.number('+52-###-###-####');
-    case 'USA':
-      return faker.phone.number('(+1) ###-###-####');
-    case 'UK':
-      return faker.phone.number('+44 #### ######');
+      return faker.phone.number('+52-xxx-xxx-xxxx');
+    case 'United_States':
+      return faker.phone.number('(+1) xxx-xxx-xxxx');
+    case 'Great_Britain':
+      return faker.phone.number('+44 xxxx xxxxxx');
     default:
-      return faker.phone.number();
+      return faker.phone.number('xxx-xxx-xxxx');
   }
 }
 
