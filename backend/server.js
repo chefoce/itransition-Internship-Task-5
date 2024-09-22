@@ -7,7 +7,7 @@ const port = 3000;
 
 app.use(
   cors({
-      origin: 'https://itransition-internship-task-5-backend.onrender.com',
+      origin: 'https://itransition-internship-task-5-frontend.onrender.com/',
   })
 );
 app.use(express.json());
