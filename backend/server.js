@@ -1,15 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-const seedrandom = require('seedrandom');
-const { faker } = require('@faker-js/faker'); // Use faker singleton
+import express from 'express';
+import cors from 'cors';
+import seedrandom from 'seedrandom';
+import { Faker, en, en_GB, es_MX } from '@faker-js/faker';
+
+const fakerEN_US = new Faker({ locale: [en] });
+const fakerEN_GB = new Faker({ locale: [en_GB, en] });
+const fakerES_MX = new Faker({ locale: [es_MX, en] });
+
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(
-  cors({
-      origin: 'https://itransition-internship-task-5-frontend.onrender.com',
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 // Helper function to convert string to number for seeding
@@ -18,8 +19,8 @@ function stringToNumber(str) {
   if (str.length === 0) return hash;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
+    hash = ((hash << 5) - hash) + char;
+    hash &= hash;
   }
   return Math.abs(hash);
 }
@@ -27,13 +28,13 @@ function stringToNumber(str) {
 function getLocale(region) {
   switch (region) {
     case 'Mexico':
-      return 'es'; // Use 'es' for Spanish
+      return fakerES_MX;
     case 'United_States':
-      return 'en_US';
+      return fakerEN_US;
     case 'Great_Britain':
-      return 'en_GB';
+      return fakerEN_GB;
     default:
-      return 'en';
+      return fakerEN_US;
   }
 }
 
@@ -47,7 +48,12 @@ app.get('/api/data', (req, res) => {
   for (let i = 0; i < recordsPerPage; i++) {
     const index = (pageNumber - 1) * recordsPerPage + i + 1;
     try {
-      const record = generateRecord(index, region, parseFloat(errorsPerRecord), combinedSeed);
+      const record = generateRecord(
+        index,
+        region,
+        parseFloat(errorsPerRecord),
+        combinedSeed
+      );
       data.push(record);
     } catch (error) {
       console.error(`Error generating record ${index}:`, error);
@@ -58,14 +64,13 @@ app.get('/api/data', (req, res) => {
 });
 
 function generateRecord(index, region, errorsPerRecord, combinedSeed) {
-  const locale = getLocale(region);
-  faker.locale = locale; // Set locale directly on faker
+  const faker = getLocale(region);
   faker.seed(stringToNumber(combinedSeed + index)); // Seed faker
 
   const identifier = faker.string.uuid();
   const name = `${faker.person.firstName()} ${faker.person.middleName()} ${faker.person.lastName()}`;
-  const address = generateAddress(region);
-  const phone = generatePhone(region);
+  const address = generateAddress(region, faker);
+  const phone = generatePhone(region, faker);
 
   const record = {
     index,
@@ -140,32 +145,35 @@ function getAlphabet(region) {
   }
 }
 
-function generateAddress(region) {
+function generateAddress(region, faker) {
   switch (region) {
     case 'Mexico':
       return `${faker.location.streetAddress()} ${faker.location.city()} ${faker.location.state()}`;
     case 'United_States':
-      return `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.stateAbbr()} ${faker.location.zipCode()}`;
+      return `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.state()} ${faker.location.zipCode()}`;
     case 'Great_Britain':
-      return `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.county()}, ${faker.location.postcode()}`;
+      return `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.county()}, ${faker.location.zipCode()}`;
     default:
       return faker.location.streetAddress();
   }
 }
 
-function generatePhone(region) {
+function generatePhone(region, faker) {
   switch (region) {
     case 'Mexico':
-      return faker.phone.number('+52-xxx-xxx-xxxx');
+      return `+52-${faker.string.numeric(3)}-${faker.string.numeric(3)}-${faker.string.numeric(4)}`;
     case 'United_States':
-      return faker.phone.number('(+1) xxx-xxx-xxxx');
+      return `(+1) ${faker.string.numeric(3)}-${faker.string.numeric(3)}-${faker.string.numeric(4)}`;
     case 'Great_Britain':
-      return faker.phone.number('+44 xxxx xxxxxx');
+      return `+44 ${faker.string.numeric(4)} ${faker.string.numeric(6)}`;
     default:
-      return faker.phone.number('xxx-xxx-xxxx');
+      return faker.string.numeric(10);
   }
 }
+
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+export default app;

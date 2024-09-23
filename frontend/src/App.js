@@ -4,7 +4,7 @@ import Papa from 'papaparse';
 import './App.css'; // Import the CSS file
 
 function App() {
-  const [region, setRegion] = useState('United_States');
+  const [region, setRegion] = useState('Mexico');
   const [errorsPerRecord, setErrorsPerRecord] = useState(0);
   const [seed, setSeed] = useState('default-seed');
   const [data, setData] = useState([]);
@@ -29,7 +29,7 @@ function App() {
   const fetchData = async (page, reset = false) => {
     setIsFetching(true);
     try {
-      const response = await axios.get('https://itransition-internship-task-5-backend.onrender.com/api/data', {
+      const response = await axios.get('http://localhost:3001/api/data', {
         params: {
           region,
           errorsPerRecord,
