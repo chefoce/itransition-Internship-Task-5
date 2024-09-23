@@ -29,7 +29,7 @@ function App() {
   const fetchData = async (page, reset = false) => {
     setIsFetching(true);
     try {
-      const response = await axios.get('http://localhost:3001/api/data', {
+      const response = await axios.get('https://itransition-internship-task-5-backend.onrender.com/api/data', {
         params: {
           region,
           errorsPerRecord,

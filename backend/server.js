@@ -10,7 +10,11 @@ const fakerES_MX = new Faker({ locale: [es_MX, en] });
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(
+  cors({
+      origin: 'https://itransition-internship-task-5-frontend.onrender.com',
+  })
+);
 app.use(express.json());
 
 // Helper function to convert string to number for seeding
