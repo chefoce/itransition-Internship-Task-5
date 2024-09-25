@@ -12,22 +12,10 @@ const port = process.env.PORT || 3001;
 
 app.use(
   cors({
-      origin: 'https://itransition-internship-task-5-frontend.onrender.com',
+    origin: 'https://itransition-internship-task-5-frontend.onrender.com',
   })
 );
 app.use(express.json());
-
-// Helper function to convert string to number for seeding
-function stringToNumber(str) {
-  let hash = 0;
-  if (str.length === 0) return hash;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash &= hash;
-  }
-  return Math.abs(hash);
-}
 
 function getLocale(region) {
   switch (region) {
@@ -43,34 +31,38 @@ function getLocale(region) {
 }
 
 app.get('/api/data', (req, res) => {
-  console.log('Received request with query:', req.query);
   const { region, errorsPerRecord, seed, pageNumber } = req.query;
-  const recordsPerPage = pageNumber == 1 ? 20 : 10;
-  const combinedSeed = `${seed}-${pageNumber}`;
+  const pageNum = parseInt(pageNumber, 10);
+
+  const recordsPerPage = pageNum === 1 ? 20 : 10;
+  const totalRecordsBefore = pageNum === 1 ? 0 : 20 + (pageNum - 2) * 10;
   const data = [];
 
   for (let i = 0; i < recordsPerPage; i++) {
-    const index = (pageNumber - 1) * recordsPerPage + i + 1;
+    const index = totalRecordsBefore + i + 1;
+
     try {
       const record = generateRecord(
         index,
         region,
         parseFloat(errorsPerRecord),
-        combinedSeed
+        seed
       );
       data.push(record);
     } catch (error) {
       console.error(`Error generating record ${index}:`, error);
     }
   }
-
   res.json(data);
 });
 
-function generateRecord(index, region, errorsPerRecord, combinedSeed) {
+function generateRecord(index, region, errorsPerRecord, seed) {
+  console.log(`Index: ${index}, Errors: ${errorsPerRecord}, Seed: ${seed}`);
   const faker = getLocale(region);
-  faker.seed(stringToNumber(combinedSeed + index)); // Seed faker
-
+  const combinedSeed = `${seed}-${index}`;
+  const seedValue = seedrandom(combinedSeed).int32();
+  faker.seed(seedValue);
+  const rng = seedrandom(combinedSeed);
   const identifier = faker.string.uuid();
   const name = `${faker.person.firstName()} ${faker.person.middleName()} ${faker.person.lastName()}`;
   const address = generateAddress(region, faker);
@@ -89,8 +81,6 @@ function generateRecord(index, region, errorsPerRecord, combinedSeed) {
   const fractionalError = errorsPerRecord - errorsToApply;
   let totalErrors = errorsToApply;
 
-  const rng = seedrandom(`${combinedSeed}-${index}`);
-
   if (fractionalError > rng()) {
     totalErrors += 1;
   }
@@ -104,31 +94,31 @@ function generateRecord(index, region, errorsPerRecord, combinedSeed) {
 
 function applyRandomError(record, rng, region) {
   const fields = ['name', 'address', 'phone'];
-  const field = fields[Math.floor(rng() * fields.length)];
+  const fieldIndex = Math.floor(rng() * fields.length);
+  const field = fields[fieldIndex];
   record[field] = introduceError(record[field], rng, region);
 }
 
 function introduceError(text, rng, region) {
+  if (text.length === 0) return text;
+
   const errorTypes = ['delete', 'insert', 'swap'];
-  const errorType = errorTypes[Math.floor(rng() * errorTypes.length)];
+  const errorTypeIndex = Math.floor(rng() * errorTypes.length);
+  const errorType = errorTypes[errorTypeIndex];
   const position = Math.floor(rng() * text.length);
 
   switch (errorType) {
     case 'delete':
-      if (text.length > 0) {
-        return text.slice(0, position) + text.slice(position + 1);
-      }
-      return text;
+      return text.slice(0, position) + text.slice(position + 1);
     case 'insert':
       const alphabet = getAlphabet(region);
-      const randomChar = alphabet[Math.floor(rng() * alphabet.length)];
+      const charIndex = Math.floor(rng() * alphabet.length);
+      const randomChar = alphabet[charIndex];
       return text.slice(0, position) + randomChar + text.slice(position);
     case 'swap':
       if (position < text.length - 1) {
         const chars = text.split('');
-        const temp = chars[position];
-        chars[position] = chars[position + 1];
-        chars[position + 1] = temp;
+        [chars[position], chars[position + 1]] = [chars[position + 1], chars[position]];
         return chars.join('');
       }
       return text;
@@ -174,7 +164,6 @@ function generatePhone(region, faker) {
       return faker.string.numeric(10);
   }
 }
-
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

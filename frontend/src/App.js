@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Papa from 'papaparse';
-import './App.css'; // Import the CSS file
+import './App.css';
 
 function App() {
   const [region, setRegion] = useState('Mexico');
@@ -12,8 +12,31 @@ function App() {
   const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    resetData();
-  }, [region, errorsPerRecord, seed]);
+    const fetchAndSetData = async () => {
+      setIsFetching(true);
+      try {
+        const response = await axios.get('https://itransition-internship-task-5-backend.onrender.com/api/data', {
+          params: {
+            region,
+            errorsPerRecord,
+            seed,
+            pageNumber,
+          },
+        });
+        if (pageNumber === 1) {
+          setData(response.data);
+        } else {
+          setData((prevData) => [...prevData, ...response.data]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        alert('An error occurred while fetching data.');
+      }
+      setIsFetching(false);
+    };
+
+    fetchAndSetData();
+  }, [pageNumber, region, errorsPerRecord, seed]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
@@ -23,44 +46,22 @@ function App() {
   const resetData = () => {
     setData([]);
     setPageNumber(1);
-    fetchData(1, true);
   };
 
-  const fetchData = async (page, reset = false) => {
-    setIsFetching(true);
-    try {
-      const response = await axios.get('https://itransition-internship-task-5-backend.onrender.com/api/data', {
-        params: {
-          region,
-          errorsPerRecord,
-          seed,
-          pageNumber: page,
-        },
-      });
-      if (reset) {
-        setData(response.data);
-      } else {
-        setData((prevData) => [...prevData, ...response.data]);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      alert('An error occurred while fetching data.');
-    }
-    setIsFetching(false);
-  };
+  // Reset data when region, errorsPerRecord, or seed change
+  useEffect(() => {
+    resetData();
+  }, [region, errorsPerRecord, seed]);
+
 
   const handleScroll = () => {
     if (
       window.innerHeight + document.documentElement.scrollTop <
-        document.documentElement.offsetHeight - 100 ||
+      document.documentElement.offsetHeight - 100 ||
       isFetching
     )
       return;
-    setPageNumber((prevPageNumber) => {
-      const nextPage = prevPageNumber + 1;
-      fetchData(nextPage);
-      return nextPage;
-    });
+    setPageNumber((prevPageNumber) => prevPageNumber + 1);
   };
 
   const generateRandomSeed = () => {
